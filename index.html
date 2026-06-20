@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auxilo – EMI & SI Calculator</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- SheetJS for Excel export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- jsPDF for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="logo">
+      <img src="logo.png" alt="DV Analytics" class="logo-img" />
+    </div>
+    <h1 class="page-title">EMI &amp; SI CALCULATOR FOR INSTITUTES</h1>
+    <div class="topbar-right">
+      <button class="theme-btn" onclick="toggleTheme()" title="Toggle Dark Mode">&#9790;</button>
+      <button class="download-report-btn" onclick="downloadPDF()">&#8681; Download Report</button>
+    </div>
+  </header>
+
+  <!-- TOP SECTION: FORM + SUMMARY -->
+  <div class="top-section">
+
+    <!-- LOAN DETAILS CARD -->
+    <div class="card loan-card">
+      <div class="card-title">
+        <span class="card-icon">&#128196;</span> LOAN DETAILS
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Product Type</label>
+          <select id="productType" onchange="calculate()">
+            <option value="roi">ROI (Return on Investment)</option>
+            <option value="subvention">Subvention</option>
+            <option value="hybrid">Hybrid</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Loan Amount (&#8377;)</label>
+          <input type="number" id="loanAmount" value="100000" min="1000" />
+        </div>
+        <div class="form-group">
+          <label>Total Loan Tenure (Months)</label>
+          <input type="number" id="tenure" value="12" min="1" max="360" />
+        </div>
+        <div class="form-group">
+          <label>Interest Rate (% p.a.)</label>
+          <input type="number" id="interestRate" value="17.29" step="0.01" min="0" />
+        </div>
+        <div class="form-group">
+          <label>Processing Fee / Other Fee (&#8377;)</label>
+          <input type="number" id="processingFee" value="0" min="0" />
+        </div>
+        <div class="form-group">
+          <label>Disbursement Date</label>
+          <input type="date" id="disbDate" value="2026-02-05" />
+        </div>
+      </div>
+      <button class="calc-btn" onclick="calculate()">&#128290; &nbsp; CALCULATE EMI</button>
+    </div>
+
+    <!-- CALCULATION SUMMARY CARD -->
+    <div class="card summary-card">
+      <div class="card-title">
+        <span class="card-icon">&#128200;</span> CALCULATION SUMMARY
+      </div>
+      <div class="summary-body">
+        <div class="summary-grid">
+          <div class="sum-card blue">
+            <div class="sum-icon">&#8377;</div>
+            <div>
+              <div class="sum-label">EMI Amount</div>
+              <div class="sum-value" id="s-emi">&#8377; 0</div>
+            </div>
+          </div>
+          <div class="sum-card green">
+            <div class="sum-icon">&#128200;</div>
+            <div>
+              <div class="sum-label">Total Interest</div>
+              <div class="sum-value" id="s-interest">&#8377; 0</div>
+            </div>
+          </div>
+          <div class="sum-card orange">
+            <div class="sum-icon">&#128179;</div>
+            <div>
+              <div class="sum-label">Total Repayment</div>
+              <div class="sum-value" id="s-total">&#8377; 0</div>
+            </div>
+          </div>
+          <div class="sum-card pink">
+            <div class="sum-icon">&#128176;</div>
+            <div>
+              <div class="sum-label">Disbursal Amount</div>
+              <div class="sum-value" id="s-disbursal">&#8377; 0</div>
+            </div>
+          </div>
+        </div>
+        <!-- DONUT CHART -->
+        <div class="chart-wrap">
+          <canvas id="donutChart" width="160" height="160"></canvas>
+          <div class="chart-center">
+            <div class="chart-pct" id="chartPct">0%</div>
+            <div class="chart-lbl" id="chartLbl">Principal</div>
+          </div>
+          <div class="chart-legend">
+            <span class="leg-dot blue-dot"></span> Principal (<span id="legPrinPct">0%</span>)
+            <span class="leg-dot green-dot"></span> Interest (<span id="legIntPct">0%</span>)
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end top-section -->
+
+  <!-- AMORTIZATION TABLE -->
+  <div class="card table-section">
+    <div class="table-header">
+      <div class="card-title" style="margin:0;border:none;padding:0">
+        <span class="card-icon">&#128203;</span> AMORTIZATION SCHEDULE
+      </div>
+      <div class="table-actions">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search..." oninput="filterTable()" />
+          <span class="search-icon">&#128269;</span>
+        </div>
+        <button class="excel-btn" onclick="exportExcel()">&#128202; Export Excel</button>
+        <button class="pdf-btn" onclick="downloadPDF()">&#128196; Download PDF</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table id="amortTable">
+        <thead>
+          <tr>
+            <th>Sr. No.</th>
+            <th>Date</th>
+            <th>POS (&#8377;)</th>
+            <th>Interest (&#8377;)</th>
+            <th>Principal (&#8377;)</th>
+            <th>EMI (&#8377;)</th>
+            <th>Cashflow (&#8377;)</th>
+          </tr>
+        </thead>
+        <tbody id="amortBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
