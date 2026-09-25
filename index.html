@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Auxilo – EMI & SI Calculator</title>
+  <title>DV Analytics – EMI & SI Calculator</title>
   <link rel="stylesheet" href="style.css" />
   <!-- SheetJS for Excel export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -16,9 +16,9 @@
   <!-- TOP BAR -->
   <header class="topbar">
     <div class="logo">
-      <img src="logo.png" alt="DV Analytics" class="logo-img" />
+      <img src="logo.png" alt="DV Analytics" id="companyLogo" class="logo-img" />
     </div>
-    <h1 class="page-title">EMI &amp; SI CALCULATOR FOR INSTITUTES</h1>
+    <h1 class="page-title">DV ANALYTICS – EMI &amp; SI CALCULATOR FOR INSTITUTES</h1>
     <div class="topbar-right">
       <button class="theme-btn" onclick="toggleTheme()" title="Toggle Dark Mode">&#9790;</button>
       <button class="download-report-btn" onclick="downloadPDF()">&#8681; Download Report</button>
@@ -36,31 +36,39 @@
       <div class="form-grid">
         <div class="form-group">
           <label>Product Type</label>
-          <select id="productType" onchange="calculate()">
-            <option value="roi">ROI (Return on Investment)</option>
+          <select id="productType" onchange="onProductTypeChange()">
+            <option value="roi">ROI (Rate of Interest)</option>
+            <option value="fixed">Fixed Rate of Interest</option>
             <option value="subvention">Subvention</option>
             <option value="hybrid">Hybrid</option>
           </select>
         </div>
         <div class="form-group">
+          <label>Interest Rate Type</label>
+          <select id="interestType" onchange="onInterestTypeChange()">
+            <option value="reducing">Reducing Balance Rate</option>
+            <option value="fixed">Fixed Rate of Interest (Flat / SI)</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label>Loan Amount (&#8377;)</label>
-          <input type="number" id="loanAmount" value="100000" min="1000" />
+          <input type="number" id="loanAmount" value="100000" min="1000" oninput="calculate()" />
         </div>
         <div class="form-group">
           <label>Total Loan Tenure (Months)</label>
-          <input type="number" id="tenure" value="12" min="1" max="360" />
+          <input type="number" id="tenure" value="12" min="1" max="360" oninput="calculate()" />
         </div>
         <div class="form-group">
           <label>Interest Rate (% p.a.)</label>
-          <input type="number" id="interestRate" value="17.29" step="0.01" min="0" />
+          <input type="number" id="interestRate" value="17.29" step="0.01" min="0" oninput="calculate()" />
         </div>
         <div class="form-group">
           <label>Processing Fee / Other Fee (&#8377;)</label>
-          <input type="number" id="processingFee" value="0" min="0" />
+          <input type="number" id="processingFee" value="0" min="0" oninput="calculate()" />
         </div>
-        <div class="form-group">
+        <div class="form-group full-width">
           <label>Disbursement Date</label>
-          <input type="date" id="disbDate" value="2026-02-05" />
+          <input type="date" id="disbDate" value="2026-02-05" onchange="calculate()" />
         </div>
       </div>
       <button class="calc-btn" onclick="calculate()">&#128290; &nbsp; CALCULATE EMI</button>
@@ -68,8 +76,9 @@
 
     <!-- CALCULATION SUMMARY CARD -->
     <div class="card summary-card">
-      <div class="card-title">
-        <span class="card-icon">&#128200;</span> CALCULATION SUMMARY
+      <div class="card-title" style="justify-content: space-between;">
+        <div><span class="card-icon">&#128200;</span> CALCULATION SUMMARY</div>
+        <div id="methodBadge" class="method-badge reducing">Reducing Balance</div>
       </div>
       <div class="summary-body">
         <div class="summary-grid">
@@ -115,6 +124,7 @@
           </div>
         </div>
       </div>
+      <div id="equivRateNotice" class="equiv-rate-notice" style="display: none;"></div>
     </div>
 
   </div><!-- end top-section -->
@@ -140,12 +150,12 @@
         <thead>
           <tr>
             <th>Sr. No.</th>
-            <th>Date</th>
-            <th>POS (&#8377;)</th>
-            <th>Interest (&#8377;)</th>
+            <th>Due Date</th>
+            <th>Opening Balance (&#8377;)</th>
             <th>Principal (&#8377;)</th>
-            <th>EMI (&#8377;)</th>
-            <th>Cashflow (&#8377;)</th>
+            <th>Interest (&#8377;)</th>
+            <th>Monthly EMI (&#8377;)</th>
+            <th>Closing Balance (&#8377;)</th>
           </tr>
         </thead>
         <tbody id="amortBody"></tbody>
@@ -153,6 +163,7 @@
     </div>
   </div>
 
+  <script src="logo_data.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
